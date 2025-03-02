@@ -2,9 +2,11 @@
 import React from 'react';
 import { formatCurrency } from '@/lib/savingsUtils';
 import { useSavings } from '@/context/SavingsContext';
+import { useAuth } from '@/context/AuthContext';
 
 const StatsDisplay = () => {
   const { currentAmount, remainingAmount, progressPercentage } = useSavings();
+  const { user } = useAuth();
   
   return (
     <div className="w-full">

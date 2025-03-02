@@ -7,10 +7,13 @@ import StatsDisplay from '@/components/StatsDisplay';
 import { useSavings } from '@/context/SavingsContext';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/context/AuthContext';
+import { LogOut } from 'lucide-react';
 
 // Main controls for the savings box
 const Controls = () => {
   const { makePayment, resetSavings } = useSavings();
+  const { signOut, user } = useAuth();
 
   return (
     <div className="flex flex-wrap justify-center gap-4 my-8">
@@ -48,6 +51,8 @@ const Controls = () => {
 
 // App wrapper with header and footer
 const Index = () => {
+  const { signOut, user } = useAuth();
+
   return (
     <SavingsProvider>
       <div className="min-h-screen py-8 px-4 sm:px-6 bg-[#f5f6fa]">
@@ -56,10 +61,16 @@ const Index = () => {
             <h1 className="text-4xl font-bold text-[#654321]">
               Digital Savings Box
             </h1>
-            <button className="text-[#654321] border border-green-500 rounded-md px-4 py-2 flex items-center gap-2">
-              <span className="w-3 h-3 bg-green-500 rounded-full"></span>
-              Connected
-            </button>
+            <div className="flex items-center gap-3">
+              <span className="text-sm text-gray-600">{user?.email}</span>
+              <button 
+                onClick={signOut}
+                className="text-[#654321] border border-green-500 rounded-md px-4 py-2 flex items-center gap-2 hover:bg-green-50 transition-colors"
+              >
+                <LogOut size={16} />
+                Logout
+              </button>
+            </div>
           </div>
 
           <StatsDisplay />
