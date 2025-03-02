@@ -14,14 +14,14 @@ interface MoneroWalletModalProps {
 
 const MoneroWalletModal: React.FC<MoneroWalletModalProps> = ({ isOpen, onClose, amount }) => {
   const { completePayment } = useSavings();
-  const [walletAddress, setWalletAddress] = useState<string>('');
+  const [destinationAddress, setDestinationAddress] = useState<string>('');
   const [showAddressInput, setShowAddressInput] = useState<boolean>(true);
   
-  // Load saved wallet address from localStorage
+  // Load saved destination address from localStorage
   useEffect(() => {
-    const savedAddress = localStorage.getItem('moneroWalletAddress');
+    const savedAddress = localStorage.getItem('moneroDestinationAddress');
     if (savedAddress) {
-      setWalletAddress(savedAddress);
+      setDestinationAddress(savedAddress);
       setShowAddressInput(false);
     }
   }, []);
@@ -31,16 +31,16 @@ const MoneroWalletModal: React.FC<MoneroWalletModalProps> = ({ isOpen, onClose, 
   const amountInXMR = (amount * xmrRate).toFixed(6);
 
   const handleSaveAddress = () => {
-    if (!walletAddress.trim()) {
-      toast.error("Please enter your Monero wallet address");
+    if (!destinationAddress.trim()) {
+      toast.error("Please enter the Monero address you want to contribute to");
       return;
     }
     
     // Save to localStorage for future use
-    localStorage.setItem('moneroWalletAddress', walletAddress);
+    localStorage.setItem('moneroDestinationAddress', destinationAddress);
     
     setShowAddressInput(false);
-    toast.success("Wallet address saved");
+    toast.success("Destination address saved");
   };
 
   const handlePaymentConfirmation = () => {
@@ -74,19 +74,19 @@ const MoneroWalletModal: React.FC<MoneroWalletModalProps> = ({ isOpen, onClose, 
           {showAddressInput ? (
             <div className="space-y-4">
               <div>
-                <label htmlFor="walletAddress" className="block text-sm font-medium text-gray-700 mb-1">
-                  Your Monero Wallet Address
+                <label htmlFor="destinationAddress" className="block text-sm font-medium text-gray-700 mb-1">
+                  Destination Monero Address
                 </label>
                 <input
-                  id="walletAddress"
+                  id="destinationAddress"
                   type="text"
                   className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#654321]"
-                  placeholder="Enter your Monero address"
-                  value={walletAddress}
-                  onChange={(e) => setWalletAddress(e.target.value)}
+                  placeholder="Enter the address you want to contribute to"
+                  value={destinationAddress}
+                  onChange={(e) => setDestinationAddress(e.target.value)}
                 />
                 <p className="mt-2 text-xs text-gray-500">
-                  This is the address where you want to receive payments.
+                  This is the address where you or others will send Monero to contribute to this savings goal.
                 </p>
               </div>
               <button
@@ -103,13 +103,13 @@ const MoneroWalletModal: React.FC<MoneroWalletModalProps> = ({ isOpen, onClose, 
                   Send {amountInXMR} XMR to this address:
                 </p>
                 <div className="bg-gray-100 p-3 rounded-md overflow-hidden text-xs break-all">
-                  {walletAddress}
+                  {destinationAddress}
                 </div>
               </div>
               
               <div className="flex justify-center my-4">
                 <div className="p-3 bg-white rounded-md border">
-                  <QRCodeSVG value={`monero:${walletAddress}?tx_amount=${amountInXMR}`} size={180} />
+                  <QRCodeSVG value={`monero:${destinationAddress}?tx_amount=${amountInXMR}`} size={180} />
                 </div>
               </div>
               
@@ -122,6 +122,12 @@ const MoneroWalletModal: React.FC<MoneroWalletModalProps> = ({ isOpen, onClose, 
                   className="w-full bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors"
                 >
                   I've Sent the Payment
+                </button>
+                <button
+                  onClick={onClose}
+                  className="w-full bg-gray-200 text-gray-800 px-4 py-2 rounded-md hover:bg-gray-300 transition-colors"
+                >
+                  Cancel
                 </button>
               </div>
             </div>

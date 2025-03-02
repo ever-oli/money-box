@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { SavingsProvider } from '@/context/SavingsContext';
@@ -11,13 +10,11 @@ import { useAuth } from '@/context/AuthContext';
 import { LogOut } from 'lucide-react';
 import MoneroWalletModal from '@/components/MoneroWalletModal';
 
-// Main controls for the savings box
 const Controls = () => {
   const { makePayment, resetSavings, selectedCellAmount, selectedCell } = useSavings();
   const { signOut, user } = useAuth();
   const [isMoneroModalOpen, setIsMoneroModalOpen] = useState(false);
 
-  // Check if a cell is selected and open modal when appropriate
   useEffect(() => {
     if (selectedCell !== null && selectedCellAmount > 0) {
       setIsMoneroModalOpen(true);
@@ -38,7 +35,7 @@ const Controls = () => {
         className="bg-wood-dark text-white px-6 py-3 rounded-md font-medium hover:bg-wood-border transition-all duration-300 ease-out"
         onClick={handleMakePayment}
       >
-        Make Payment with Monero
+        Contribute with Monero
       </button>
       
       <AlertDialog>
@@ -72,7 +69,6 @@ const Controls = () => {
   );
 };
 
-// App wrapper with header and footer
 const Index = () => {
   const { signOut, user } = useAuth();
 
