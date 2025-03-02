@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { X } from 'lucide-react';
+import { X, Info } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { toast } from 'sonner';
 import { useSavings } from '@/context/SavingsContext';
@@ -16,6 +16,7 @@ const MoneroWalletModal: React.FC<MoneroWalletModalProps> = ({ isOpen, onClose, 
   const { completePayment } = useSavings();
   const [destinationAddress, setDestinationAddress] = useState<string>('');
   const [showAddressInput, setShowAddressInput] = useState<boolean>(true);
+  const [paymentConfirmationStep, setPaymentConfirmationStep] = useState<boolean>(false);
   
   // Load saved destination address from localStorage
   useEffect(() => {
@@ -43,12 +44,18 @@ const MoneroWalletModal: React.FC<MoneroWalletModalProps> = ({ isOpen, onClose, 
     toast.success("Destination address saved");
   };
 
+  const handleInitiatePayment = () => {
+    // Move to confirmation step
+    setPaymentConfirmationStep(true);
+  };
+
   const handlePaymentConfirmation = () => {
-    // In a real app, you might implement a way to verify the transaction
-    // For now, we trust the user confirmation
+    // In a real app, you would implement verification logic here
     completePayment();
     onClose();
     toast.success(`Payment of ${formatCurrency(amount)} confirmed!`);
+    // Reset payment confirmation step for next time
+    setPaymentConfirmationStep(false);
   };
 
   if (!isOpen) return null;
@@ -81,12 +88,12 @@ const MoneroWalletModal: React.FC<MoneroWalletModalProps> = ({ isOpen, onClose, 
                   id="destinationAddress"
                   type="text"
                   className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#654321]"
-                  placeholder="Enter the address you want to contribute to"
+                  placeholder="Enter the destination Monero address"
                   value={destinationAddress}
                   onChange={(e) => setDestinationAddress(e.target.value)}
                 />
                 <p className="mt-2 text-xs text-gray-500">
-                  This is the address where you or others will send Monero to contribute to this savings goal.
+                  This is the address where you want to receive Monero contributions for this savings goal.
                 </p>
               </div>
               <button
@@ -95,6 +102,38 @@ const MoneroWalletModal: React.FC<MoneroWalletModalProps> = ({ isOpen, onClose, 
               >
                 Save Address
               </button>
+            </div>
+          ) : paymentConfirmationStep ? (
+            <div className="space-y-4">
+              <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-md flex items-start gap-3">
+                <Info size={20} className="text-yellow-600 flex-shrink-0 mt-0.5" />
+                <div>
+                  <h3 className="font-medium text-yellow-800">Important Note</h3>
+                  <p className="text-sm text-yellow-700">
+                    In a production app, this step would verify your transaction on the Monero blockchain. 
+                    For demonstration purposes, we're trusting your confirmation.
+                  </p>
+                </div>
+              </div>
+              
+              <p className="text-sm text-gray-600">
+                Please confirm that you have sent exactly <span className="font-bold">{amountInXMR} XMR</span> to the destination address.
+              </p>
+              
+              <div className="flex flex-col space-y-3">
+                <button
+                  onClick={handlePaymentConfirmation}
+                  className="w-full bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors"
+                >
+                  Confirm Payment Sent
+                </button>
+                <button
+                  onClick={() => setPaymentConfirmationStep(false)}
+                  className="w-full bg-gray-200 text-gray-800 px-4 py-2 rounded-md hover:bg-gray-300 transition-colors"
+                >
+                  Go Back
+                </button>
+              </div>
             </div>
           ) : (
             <div className="space-y-4">
@@ -109,17 +148,21 @@ const MoneroWalletModal: React.FC<MoneroWalletModalProps> = ({ isOpen, onClose, 
               
               <div className="flex justify-center my-4">
                 <div className="p-3 bg-white rounded-md border">
-                  <QRCodeSVG value={`monero:${destinationAddress}?tx_amount=${amountInXMR}`} size={180} />
+                  <img 
+                    src="public/lovable-uploads/78f97d6a-3663-4812-920c-3adde48b1c76.png" 
+                    alt="Monero payment QR code" 
+                    className="w-40 h-40"
+                  />
                 </div>
               </div>
               
               <div className="text-center space-y-4">
                 <p className="text-sm text-gray-600">
-                  After sending the payment from your Monero wallet, click the button below to confirm.
+                  After sending the payment from your Monero wallet, click the button below to proceed.
                 </p>
                 <button
-                  onClick={handlePaymentConfirmation}
-                  className="w-full bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors"
+                  onClick={handleInitiatePayment}
+                  className="w-full bg-[#654321] text-white px-4 py-2 rounded-md hover:bg-[#7c5a3c] transition-colors"
                 >
                   I've Sent the Payment
                 </button>
