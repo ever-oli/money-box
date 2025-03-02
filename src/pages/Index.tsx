@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { SavingsProvider } from '@/context/SavingsContext';
 import SavingsGrid from '@/components/SavingsGrid';
@@ -9,19 +9,29 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/AuthContext';
 import { LogOut } from 'lucide-react';
+import MoneroWalletModal from '@/components/MoneroWalletModal';
 
 // Main controls for the savings box
 const Controls = () => {
-  const { makePayment, resetSavings } = useSavings();
+  const { makePayment, resetSavings, selectedCellAmount } = useSavings();
   const { signOut, user } = useAuth();
+  const [isMoneroModalOpen, setIsMoneroModalOpen] = useState(false);
+
+  const handleMakePayment = () => {
+    if (selectedCellAmount) {
+      setIsMoneroModalOpen(true);
+    } else {
+      makePayment();
+    }
+  };
 
   return (
     <div className="flex flex-wrap justify-center gap-4 my-8">
       <button
         className="bg-wood-dark text-white px-6 py-3 rounded-md font-medium hover:bg-wood-border transition-all duration-300 ease-out"
-        onClick={makePayment}
+        onClick={handleMakePayment}
       >
-        Make Payment
+        Make Payment with Monero
       </button>
       
       <AlertDialog>
@@ -45,6 +55,14 @@ const Controls = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      
+      {selectedCellAmount > 0 && (
+        <MoneroWalletModal 
+          isOpen={isMoneroModalOpen} 
+          onClose={() => setIsMoneroModalOpen(false)} 
+          amount={selectedCellAmount}
+        />
+      )}
     </div>
   );
 };

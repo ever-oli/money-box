@@ -1,206 +1,131 @@
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { v4 as uuidv4 } from 'uuid';
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { generateCellValues, formatCurrency, calculatePercentage, animateNumber } from '@/lib/savingsUtils';
-import { toast } from '@/components/ui/use-toast';
+// Define the shape of a grid cell
+export interface GridCell {
+  id: string;
+  amount: number;
+}
 
-// Constants
-const TOTAL_GOAL = 10000;
-const STORAGE_KEY = 'digital-savings-box';
-
-// Types
-type SavingsContextType = {
-  cellValues: number[];
-  filledCells: number[];
-  selectedCell: number | null;
+// Define the context type
+export interface SavingsContextType {
+  gridCells: GridCell[];
+  filledCells: string[];
   currentAmount: number;
   remainingAmount: number;
-  progressPercentage: string;
-  selectCell: (index: number) => void;
+  progressPercentage: number;
   makePayment: () => void;
   resetSavings: () => void;
+  selectedCellAmount: number;
+  completePayment: () => void;
+}
+
+// Create the context with a default value of null
+const SavingsContext = createContext<SavingsContextType | null>(null);
+
+// Create a custom hook to use the context
+export const useSavings = () => {
+  const context = useContext(SavingsContext);
+  if (!context) {
+    throw new Error("useSavings must be used within a SavingsProvider");
+  }
+  return context;
 };
 
-// Default context value
-const defaultContextValue: SavingsContextType = {
-  cellValues: [],
-  filledCells: [],
-  selectedCell: null,
-  currentAmount: 0,
-  remainingAmount: TOTAL_GOAL,
-  progressPercentage: '0.0',
-  selectCell: () => {},
-  makePayment: () => {},
-  resetSavings: () => {},
-};
+export const SavingsProvider: React.FC<{children: React.ReactNode}> = ({ children }) => {
+  const [gridCells, setGridCells] = useState<GridCell[]>([]);
+  const [filledCells, setFilledCells] = useState<string[]>([]);
+  const [selectedCellAmount, setSelectedCellAmount] = useState<number>(0);
 
-// Create context
-const SavingsContext = createContext<SavingsContextType>(defaultContextValue);
-
-// Provider component
-export const SavingsProvider = ({ children }: { children: ReactNode }) => {
-  const [cellValues, setCellValues] = useState<number[]>([]);
-  const [filledCells, setFilledCells] = useState<number[]>([]);
-  const [selectedCell, setSelectedCell] = useState<number | null>(null);
-  const [currentAmount, setCurrentAmount] = useState(0);
-  const [remainingAmount, setRemainingAmount] = useState(TOTAL_GOAL);
-  const [progressPercentage, setProgressPercentage] = useState('0.0');
-
-  // Initialize or load saved state
   useEffect(() => {
-    const savedData = localStorage.getItem(STORAGE_KEY);
-    
-    if (savedData) {
-      try {
-        const { cellValues, filledCells, currentAmount } = JSON.parse(savedData);
-        setCellValues(cellValues);
-        setFilledCells(filledCells);
-        setCurrentAmount(currentAmount);
-        setRemainingAmount(TOTAL_GOAL - currentAmount);
-        setProgressPercentage(calculatePercentage(currentAmount, TOTAL_GOAL));
-      } catch (error) {
-        console.error('Failed to parse saved data:', error);
-        initializeNewSavings();
-      }
-    } else {
-      initializeNewSavings();
+    // Load filled cells from localStorage on component mount
+    const storedFilledCells = localStorage.getItem("filledCells");
+    if (storedFilledCells) {
+      setFilledCells(JSON.parse(storedFilledCells));
     }
+
+    // Initialize grid cells
+    const initialCells = Array.from({ length: 256 }, (_, index) => ({
+      id: uuidv4(),
+      amount: Math.floor(Math.random() * 9) + 1, // Random amount between 1 and 9
+    }));
+    setGridCells(initialCells);
   }, []);
 
-  // Save state changes to localStorage
-  useEffect(() => {
-    if (cellValues.length > 0) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({
-        cellValues,
-        filledCells,
-        currentAmount
-      }));
-    }
-  }, [cellValues, filledCells, currentAmount]);
-
-  // Initialize new savings
-  const initializeNewSavings = () => {
-    const newCellValues = generateCellValues();
-    setCellValues(newCellValues);
-    setFilledCells([]);
-    setSelectedCell(null);
-    setCurrentAmount(0);
-    setRemainingAmount(TOTAL_GOAL);
-    setProgressPercentage('0.0');
-  };
-
-  // Select a cell
-  const selectCell = (index: number) => {
-    // Don't allow selecting filled cells
-    if (filledCells.includes(index)) return;
-    
-    setSelectedCell(index);
-  };
-
-  // Make a payment
   const makePayment = () => {
-    if (selectedCell === null) {
-      toast({
-        title: "No cell selected",
-        description: "Please select a cell first!",
-        variant: "destructive"
-      });
-      return;
+    if (gridCells.length === 0 || filledCells.length === 256) {
+      return; // No cells available or all filled
     }
-
-    if (filledCells.includes(selectedCell)) {
-      toast({
-        title: "Already filled",
-        description: "This cell is already filled. Please select another cell.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    // Update filled cells
-    const newFilledCells = [...filledCells, selectedCell];
-    setFilledCells(newFilledCells);
-
-    // Update amounts with animation
-    const newAmount = currentAmount + cellValues[selectedCell];
     
-    animateNumber(
-      currentAmount, 
-      newAmount, 
-      1000, 
-      (val) => formatCurrency(Math.floor(val)), 
-      (formattedVal) => setCurrentAmount(newAmount)
+    // Find an unfilled cell at random
+    const unfilledCells = gridCells.filter(
+      (cell) => !filledCells.includes(cell.id)
     );
-
-    const newRemaining = TOTAL_GOAL - newAmount;
     
-    animateNumber(
-      remainingAmount, 
-      newRemaining, 
-      1000, 
-      (val) => formatCurrency(Math.ceil(val)), 
-      (formattedVal) => setRemainingAmount(newRemaining)
-    );
-
-    // Update progress percentage
-    setProgressPercentage(calculatePercentage(newAmount, TOTAL_GOAL));
-
-    // Reset selected cell
-    setSelectedCell(null);
-
-    // Show success toast
-    toast({
-      title: "Payment made!",
-      description: `You've saved ${formatCurrency(cellValues[selectedCell])}`,
-      variant: "default"
-    });
-
-    // Check if goal is reached
-    if (newAmount >= TOTAL_GOAL) {
-      setTimeout(() => {
-        toast({
-          title: "Congratulations! 🎉",
-          description: "You've reached your savings goal of $10,000!",
-          variant: "default",
-          duration: 5000,
-        });
-      }, 1500);
+    if (unfilledCells.length === 0) return;
+    
+    const randomCell = unfilledCells[Math.floor(Math.random() * unfilledCells.length)];
+    setSelectedCellAmount(randomCell.amount);
+  };
+  
+  // Complete payment function for when Monero payment is confirmed
+  const completePayment = () => {
+    if (selectedCellAmount > 0) {
+      // Find a cell with this amount
+      const unfilledCells = gridCells.filter(
+        (cell) => !filledCells.includes(cell.id) && cell.amount === selectedCellAmount
+      );
+      
+      if (unfilledCells.length > 0) {
+        const cellToFill = unfilledCells[0];
+        setFilledCells([...filledCells, cellToFill.id]);
+        
+        // Save to localStorage
+        localStorage.setItem(
+          "filledCells",
+          JSON.stringify([...filledCells, cellToFill.id])
+        );
+        
+        // Reset selected amount
+        setSelectedCellAmount(0);
+      }
     }
   };
 
-  // Reset savings
   const resetSavings = () => {
-    initializeNewSavings();
-    toast({
-      title: "Savings reset",
-      description: "Your savings box has been reset to zero.",
-      variant: "default"
-    });
+    // Clear filled cells from state
+    setFilledCells([]);
+
+    // Clear filled cells from localStorage
+    localStorage.removeItem("filledCells");
   };
 
-  const value = {
-    cellValues,
-    filledCells,
-    selectedCell,
-    currentAmount,
-    remainingAmount,
-    progressPercentage,
-    selectCell,
-    makePayment,
-    resetSavings
-  };
+  const currentAmount = gridCells.reduce((sum, cell) => {
+    if (filledCells.includes(cell.id)) {
+      return sum + cell.amount;
+    }
+    return sum;
+  }, 0);
+
+  const totalPossibleAmount = gridCells.reduce((sum, cell) => sum + cell.amount, 0);
+  const remainingAmount = totalPossibleAmount - currentAmount;
+  const progressPercentage = totalPossibleAmount === 0 ? 0 : Math.round((currentAmount / totalPossibleAmount) * 100);
 
   return (
-    <SavingsContext.Provider value={value}>
+    <SavingsContext.Provider
+      value={{
+        gridCells,
+        filledCells,
+        currentAmount,
+        remainingAmount,
+        progressPercentage,
+        makePayment,
+        resetSavings,
+        selectedCellAmount,
+        completePayment,
+      }}
+    >
       {children}
     </SavingsContext.Provider>
   );
-};
-
-// Hook for using the savings context
-export const useSavings = () => {
-  const context = useContext(SavingsContext);
-  if (context === undefined) {
-    throw new Error('useSavings must be used within a SavingsProvider');
-  }
-  return context;
 };
