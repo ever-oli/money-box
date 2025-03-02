@@ -53,18 +53,35 @@ export const SavingsProvider: React.FC<{children: React.ReactNode}> = ({ childre
 
     // Initialize grid cells
     const initialCells = Array.from({ length: 256 }, (_, index) => ({
-      id: uuidv4(),
-      amount: Math.floor(Math.random() * 9) + 1, // Random amount between 1 and 9
+      id: index.toString(),
+      amount: getRandomAmount(), // Use function to get proper amounts
     }));
     setGridCells(initialCells);
   }, []);
 
+  // Function to get random amount based on PRD requirements ($5, $10, $20, $50, $100, $200)
+  const getRandomAmount = () => {
+    const amounts = [5, 10, 20, 50, 100, 200];
+    return amounts[Math.floor(Math.random() * amounts.length)];
+  };
+
   // Function to select a cell by its index
   const selectCell = (index: number) => {
-    setSelectedCell(index);
+    if (index !== null && !filledCells.includes(index.toString())) {
+      setSelectedCell(index);
+      // Set the selected cell amount based on the grid cell amount
+      if (gridCells.length > 0 && index < gridCells.length) {
+        setSelectedCellAmount(gridCells[index].amount);
+      }
+    }
   };
 
   const makePayment = () => {
+    // This function is now used as a fallback if no cell is selected
+    if (selectedCell !== null) {
+      return; // If a cell is already selected, don't do anything
+    }
+    
     if (gridCells.length === 0 || filledCells.length === 256) {
       return; // No cells available or all filled
     }
@@ -78,28 +95,32 @@ export const SavingsProvider: React.FC<{children: React.ReactNode}> = ({ childre
     
     const randomCell = unfilledCells[Math.floor(Math.random() * unfilledCells.length)];
     setSelectedCellAmount(randomCell.amount);
+    
+    // Also set the selected cell index
+    const selectedIndex = gridCells.findIndex(cell => cell.id === randomCell.id);
+    if (selectedIndex !== -1) {
+      setSelectedCell(selectedIndex);
+    }
   };
   
   // Complete payment function for when Monero payment is confirmed
   const completePayment = () => {
-    if (selectedCellAmount > 0) {
-      // Find a cell with this amount
-      const unfilledCells = gridCells.filter(
-        (cell) => !filledCells.includes(cell.id) && cell.amount === selectedCellAmount
-      );
+    if (selectedCell !== null && selectedCellAmount > 0) {
+      const cellId = gridCells[selectedCell].id;
       
-      if (unfilledCells.length > 0) {
-        const cellToFill = unfilledCells[0];
-        setFilledCells([...filledCells, cellToFill.id]);
+      if (!filledCells.includes(cellId)) {
+        // Add cell to filled cells
+        setFilledCells([...filledCells, cellId]);
         
         // Save to localStorage
         localStorage.setItem(
           "filledCells",
-          JSON.stringify([...filledCells, cellToFill.id])
+          JSON.stringify([...filledCells, cellId])
         );
         
-        // Reset selected amount
+        // Reset selected amount and cell
         setSelectedCellAmount(0);
+        setSelectedCell(null);
       }
     }
   };
@@ -107,6 +128,8 @@ export const SavingsProvider: React.FC<{children: React.ReactNode}> = ({ childre
   const resetSavings = () => {
     // Clear filled cells from state
     setFilledCells([]);
+    setSelectedCell(null);
+    setSelectedCellAmount(0);
 
     // Clear filled cells from localStorage
     localStorage.removeItem("filledCells");

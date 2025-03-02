@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { toast } from 'sonner';
@@ -17,6 +17,15 @@ const MoneroWalletModal: React.FC<MoneroWalletModalProps> = ({ isOpen, onClose, 
   const [walletAddress, setWalletAddress] = useState<string>('');
   const [showAddressInput, setShowAddressInput] = useState<boolean>(true);
   
+  // Load saved wallet address from localStorage
+  useEffect(() => {
+    const savedAddress = localStorage.getItem('moneroWalletAddress');
+    if (savedAddress) {
+      setWalletAddress(savedAddress);
+      setShowAddressInput(false);
+    }
+  }, []);
+  
   // Placeholder conversion rate - in a production app this would come from an API
   const xmrRate = 0.005; // USD to XMR (fictional rate for example)
   const amountInXMR = (amount * xmrRate).toFixed(6);
@@ -26,7 +35,10 @@ const MoneroWalletModal: React.FC<MoneroWalletModalProps> = ({ isOpen, onClose, 
       toast.error("Please enter your Monero wallet address");
       return;
     }
-    // In a real app, you would validate the Monero address format
+    
+    // Save to localStorage for future use
+    localStorage.setItem('moneroWalletAddress', walletAddress);
+    
     setShowAddressInput(false);
     toast.success("Wallet address saved");
   };

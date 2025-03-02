@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { SavingsProvider } from '@/context/SavingsContext';
 import SavingsGrid from '@/components/SavingsGrid';
@@ -13,12 +13,19 @@ import MoneroWalletModal from '@/components/MoneroWalletModal';
 
 // Main controls for the savings box
 const Controls = () => {
-  const { makePayment, resetSavings, selectedCellAmount } = useSavings();
+  const { makePayment, resetSavings, selectedCellAmount, selectedCell } = useSavings();
   const { signOut, user } = useAuth();
   const [isMoneroModalOpen, setIsMoneroModalOpen] = useState(false);
 
+  // Check if a cell is selected and open modal when appropriate
+  useEffect(() => {
+    if (selectedCell !== null && selectedCellAmount > 0) {
+      setIsMoneroModalOpen(true);
+    }
+  }, [selectedCell, selectedCellAmount]);
+
   const handleMakePayment = () => {
-    if (selectedCellAmount) {
+    if (selectedCell !== null && selectedCellAmount > 0) {
       setIsMoneroModalOpen(true);
     } else {
       makePayment();
@@ -56,13 +63,11 @@ const Controls = () => {
         </AlertDialogContent>
       </AlertDialog>
       
-      {selectedCellAmount > 0 && (
-        <MoneroWalletModal 
-          isOpen={isMoneroModalOpen} 
-          onClose={() => setIsMoneroModalOpen(false)} 
-          amount={selectedCellAmount}
-        />
-      )}
+      <MoneroWalletModal 
+        isOpen={isMoneroModalOpen} 
+        onClose={() => setIsMoneroModalOpen(false)} 
+        amount={selectedCellAmount}
+      />
     </div>
   );
 };
