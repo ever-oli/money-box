@@ -6,36 +6,28 @@ import SavingsGrid from '@/components/SavingsGrid';
 import StatsDisplay from '@/components/StatsDisplay';
 import { useSavings } from '@/context/SavingsContext';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { Button } from '@/components/ui/button';
 
 // Main controls for the savings box
 const Controls = () => {
   const { makePayment, resetSavings } = useSavings();
 
   return (
-    <motion.div 
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.3, duration: 0.5 }}
-      className="flex flex-wrap justify-center gap-4 my-8"
-    >
-      <motion.button
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-        className="button-glow px-6 py-3 bg-gradient-to-r from-wood-dark to-wood-border text-white rounded-lg font-medium shadow-lg hover:shadow-xl transition-all duration-300 ease-out"
+    <div className="flex flex-wrap justify-center gap-4 my-8">
+      <button
+        className="bg-wood-dark text-white px-6 py-3 rounded-md font-medium hover:bg-wood-border transition-all duration-300 ease-out"
         onClick={makePayment}
       >
         Make Payment
-      </motion.button>
+      </button>
       
       <AlertDialog>
         <AlertDialogTrigger asChild>
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className="px-6 py-3 bg-gradient-to-r from-gray-500 to-gray-600 text-white rounded-lg font-medium shadow-lg hover:shadow-xl transition-all duration-300 ease-out"
+          <button
+            className="px-6 py-3 bg-gray-500 text-white rounded-md font-medium hover:bg-gray-600 transition-all duration-300 ease-out"
           >
             Reset Savings
-          </motion.button>
+          </button>
         </AlertDialogTrigger>
         <AlertDialogContent className="border-wood-dark/20">
           <AlertDialogHeader>
@@ -50,7 +42,7 @@ const Controls = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </motion.div>
+    </div>
   );
 };
 
@@ -58,35 +50,25 @@ const Controls = () => {
 const Index = () => {
   return (
     <SavingsProvider>
-      <div className="min-h-screen py-12 px-4 sm:px-6">
-        <div className="max-w-4xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="text-center mb-12"
-          >
-            <h1 className="text-4xl sm:text-5xl font-bold text-wood-dark mb-4 tracking-tight">
+      <div className="min-h-screen py-8 px-4 sm:px-6 bg-[#f5f6fa]">
+        <div className="max-w-3xl mx-auto">
+          <div className="flex justify-between items-center mb-8">
+            <h1 className="text-4xl font-bold text-[#654321]">
               Digital Savings Box
             </h1>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              Transform your savings journey with this interactive digital box. Click on cells to select them, then make a payment to fill them in.
-            </p>
-          </motion.div>
+            <button className="text-[#654321] border border-green-500 rounded-md px-4 py-2 flex items-center gap-2">
+              <span className="w-3 h-3 bg-green-500 rounded-full"></span>
+              Connected
+            </button>
+          </div>
 
           <StatsDisplay />
           <Controls />
           <SavingsGrid />
 
-          <motion.footer
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 1, duration: 0.5 }}
-            className="mt-16 text-center text-sm text-gray-500"
-          >
+          <footer className="mt-8 text-center text-sm text-gray-500">
             <p>Based on the traditional savings box concept.</p>
-            <p className="mt-1">Each filled cell contributes to your $10,000 goal.</p>
-          </motion.footer>
+          </footer>
         </div>
       </div>
     </SavingsProvider>
