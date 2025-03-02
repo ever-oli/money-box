@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -18,6 +19,10 @@ export interface SavingsContextType {
   resetSavings: () => void;
   selectedCellAmount: number;
   completePayment: () => void;
+  // Add the missing properties needed for SavingsGrid.tsx
+  cellValues: number[];
+  selectedCell: number | null;
+  selectCell: (index: number) => void;
 }
 
 // Create the context with a default value of null
@@ -36,6 +41,8 @@ export const SavingsProvider: React.FC<{children: React.ReactNode}> = ({ childre
   const [gridCells, setGridCells] = useState<GridCell[]>([]);
   const [filledCells, setFilledCells] = useState<string[]>([]);
   const [selectedCellAmount, setSelectedCellAmount] = useState<number>(0);
+  // Add state for the selected cell index
+  const [selectedCell, setSelectedCell] = useState<number | null>(null);
 
   useEffect(() => {
     // Load filled cells from localStorage on component mount
@@ -51,6 +58,11 @@ export const SavingsProvider: React.FC<{children: React.ReactNode}> = ({ childre
     }));
     setGridCells(initialCells);
   }, []);
+
+  // Function to select a cell by its index
+  const selectCell = (index: number) => {
+    setSelectedCell(index);
+  };
 
   const makePayment = () => {
     if (gridCells.length === 0 || filledCells.length === 256) {
@@ -111,6 +123,9 @@ export const SavingsProvider: React.FC<{children: React.ReactNode}> = ({ childre
   const remainingAmount = totalPossibleAmount - currentAmount;
   const progressPercentage = totalPossibleAmount === 0 ? 0 : Math.round((currentAmount / totalPossibleAmount) * 100);
 
+  // Create cellValues array for the grid
+  const cellValues = gridCells.map(cell => cell.amount);
+
   return (
     <SavingsContext.Provider
       value={{
@@ -123,6 +138,10 @@ export const SavingsProvider: React.FC<{children: React.ReactNode}> = ({ childre
         resetSavings,
         selectedCellAmount,
         completePayment,
+        // Add the missing properties
+        cellValues,
+        selectedCell,
+        selectCell,
       }}
     >
       {children}

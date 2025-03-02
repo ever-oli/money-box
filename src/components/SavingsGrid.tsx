@@ -34,7 +34,7 @@ const SavingsGrid = () => {
               value={value}
               index={index}
               isSelected={selectedCell === index}
-              isFilled={filledCells.includes(index)}
+              isFilled={filledCells.includes(index.toString())}
               onSelect={() => selectCell(index)}
             />
           ))}
