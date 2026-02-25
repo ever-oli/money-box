@@ -3,7 +3,7 @@ import React, { useRef, useEffect } from 'react';
 import { useSavings } from '@/context/SavingsContext';
 
 const SavingsGrid = () => {
-  const { cellValues, filledCells, selectedCell, selectCell } = useSavings();
+  const { gridCells, selectedCell, selectCell } = useSavings();
   const gridRef = useRef<HTMLDivElement>(null);
 
   // Calculate grid size based on viewport
@@ -28,16 +28,17 @@ const SavingsGrid = () => {
     >
       <div className="bg-wood-dark rounded-xl p-5 shadow-2xl overflow-hidden border-4 border-wood-border relative">
         <div className="savings-grid py-4 px-2">
-          {cellValues.map((value, index) => (
+          {gridCells.map((cell) => (
             <Cell
-              key={index}
-              value={value}
-              index={index}
-              isSelected={selectedCell === index}
-              isFilled={filledCells.includes(index.toString())}
+              key={cell.cell_index}
+              value={cell.amount}
+              index={cell.cell_index}
+              isSelected={selectedCell === cell.cell_index}
+              isFilled={cell.status === 'filled'}
+              isPending={cell.status === 'pending'}
               onSelect={() => {
-                if (!filledCells.includes(index.toString())) {
-                  selectCell(index);
+                if (cell.status === 'empty') {
+                  selectCell(cell.cell_index);
                 }
               }}
             />
@@ -53,22 +54,24 @@ interface CellProps {
   index: number;
   isSelected: boolean;
   isFilled: boolean;
+  isPending: boolean;
   onSelect: () => void;
 }
 
-const Cell = ({ value, index, isSelected, isFilled, onSelect }: CellProps) => {
-  // Compute cell classes based on state
-  const cellClassName = `cell ${isSelected ? 'selected' : ''} ${isFilled ? 'filled' : ''}`;
+const Cell = ({ value, index, isSelected, isFilled, isPending, onSelect }: CellProps) => {
+  const cellClassName = `cell ${isSelected ? 'selected' : ''} ${isFilled ? 'filled' : ''} ${isPending ? 'pending' : ''}`;
   
   return (
     <div
       className={cellClassName}
-      onClick={isFilled ? undefined : onSelect}
+      onClick={isFilled || isPending ? undefined : onSelect}
     >
       {isFilled ? (
         <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
         </svg>
+      ) : isPending ? (
+        <span className="text-xs">⏳</span>
       ) : (
         <span>${value}</span>
       )}

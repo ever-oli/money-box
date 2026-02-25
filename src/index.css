@@ -97,6 +97,20 @@
     transform: scale(1);
   }
 
+  .cell.pending {
+    background: #b8860b;
+    color: white;
+    border-color: #8b6914;
+    opacity: 0.7;
+    cursor: not-allowed;
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 0.7; }
+    50% { opacity: 0.4; }
+  }
+
   @media (max-width: 640px) {
     .savings-grid {
       grid-template-columns: repeat(var(--grid-cols, 8), 40px);

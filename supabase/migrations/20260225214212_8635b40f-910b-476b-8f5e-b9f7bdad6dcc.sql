@@ -1,0 +1,1 @@
+ALTER TABLE public.grid_cells ENABLE ROW LEVEL SECURITY;

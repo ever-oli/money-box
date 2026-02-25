@@ -1,30 +1,45 @@
-import React, { useState } from 'react';
-import { SavingsProvider } from '@/context/SavingsContext';
+import React, { useEffect } from 'react';
+import { SavingsProvider, useSavings } from '@/context/SavingsContext';
 import SavingsGrid from '@/components/SavingsGrid';
 import StatsDisplay from '@/components/StatsDisplay';
-import { useSavings } from '@/context/SavingsContext';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import MoneroWalletModal from '@/components/MoneroWalletModal';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { toast } from 'sonner';
+import { useState } from 'react';
+import { formatCurrency } from '@/lib/savingsUtils';
+import { Loader2 } from 'lucide-react';
 
 const Controls = () => {
-  const { makePayment, resetSavings, selectedCellAmount, selectedCell } = useSavings();
+  const { resetSavings, selectedCellAmount, selectedCell, isCheckingOut, initiateStripeCheckout } = useSavings();
   const [isMoneroModalOpen, setIsMoneroModalOpen] = useState(false);
-
-  const handleMakePayment = () => {
-    if (selectedCell !== null && selectedCellAmount > 0) {
-      setIsMoneroModalOpen(true);
-    } else {
-      makePayment();
-    }
-  };
 
   return (
     <div className="flex flex-wrap justify-center gap-3 my-5">
+      {/* Stripe checkout button */}
       <button
-        className="px-5 py-2.5 rounded-md font-medium bg-primary text-primary-foreground hover:bg-accent transition-all duration-300"
-        onClick={handleMakePayment}
+        className="px-5 py-2.5 rounded-md font-medium bg-primary text-primary-foreground hover:bg-accent transition-all duration-300 flex items-center gap-2 disabled:opacity-50"
+        onClick={initiateStripeCheckout}
+        disabled={selectedCell === null || isCheckingOut}
       >
-        Contribute with Monero
+        {isCheckingOut ? (
+          <>
+            <Loader2 className="w-4 h-4 animate-spin" />
+            Processing...
+          </>
+        ) : selectedCell !== null ? (
+          `Contribute ${formatCurrency(selectedCellAmount)}`
+        ) : (
+          'Select a cell to contribute'
+        )}
+      </button>
+
+      {/* Monero option */}
+      <button
+        className="px-5 py-2.5 rounded-md font-medium bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-all duration-300 disabled:opacity-50"
+        onClick={() => setIsMoneroModalOpen(true)}
+        disabled={selectedCell === null}
+      >
+        Pay with Monero
       </button>
 
       <AlertDialog>
@@ -58,9 +73,27 @@ const Controls = () => {
   );
 };
 
+const SuccessHandler = () => {
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('success') === 'true') {
+      toast.success('Payment successful! Your cell is being updated.');
+      // Clean URL
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+    if (params.get('canceled') === 'true') {
+      toast.info('Payment was canceled. The cell has been released.');
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, []);
+
+  return null;
+};
+
 const Index = () => {
   return (
     <SavingsProvider>
+      <SuccessHandler />
       <div className="min-h-screen py-8 px-4 sm:px-6 bg-background">
         <div className="max-w-3xl mx-auto">
           <h1 className="text-4xl font-bold text-primary text-center mb-6">
