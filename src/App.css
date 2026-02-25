@@ -77,25 +77,6 @@
   cursor: default;
 }
 
-/* Monero-specific styling */
-.monero-qr {
-  padding: 16px;
-  background-color: white;
-  border-radius: 8px;
-  border: 1px solid #e5e7eb;
-  display: inline-block;
-}
-
-.monero-address {
-  font-family: monospace;
-  word-break: break-all;
-  background: #f5f6fa;
-  padding: 12px;
-  border-radius: 6px;
-  font-size: 14px;
-  margin: 12px 0;
-}
-
 @media (max-width: 640px) {
   .savings-grid {
     --grid-cols: 8;

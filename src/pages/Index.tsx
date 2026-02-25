@@ -2,7 +2,6 @@ import React, { useEffect } from 'react';
 import { SavingsProvider, useSavings } from '@/context/SavingsContext';
 import SavingsGrid from '@/components/SavingsGrid';
 import StatsDisplay from '@/components/StatsDisplay';
-import MoneroWalletModal from '@/components/MoneroWalletModal';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
 import { useState } from 'react';
@@ -11,7 +10,6 @@ import { Loader2 } from 'lucide-react';
 
 const Controls = () => {
   const { resetSavings, selectedCellAmount, selectedCell, isCheckingOut, initiateStripeCheckout } = useSavings();
-  const [isMoneroModalOpen, setIsMoneroModalOpen] = useState(false);
 
   return (
     <div className="flex flex-wrap justify-center gap-3 my-5">
@@ -31,15 +29,6 @@ const Controls = () => {
         ) : (
           'Select a cell to contribute'
         )}
-      </button>
-
-      {/* Monero option */}
-      <button
-        className="px-5 py-2.5 rounded-md font-medium bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-all duration-300 disabled:opacity-50"
-        onClick={() => setIsMoneroModalOpen(true)}
-        disabled={selectedCell === null}
-      >
-        Pay with Monero
       </button>
 
       <AlertDialog>
@@ -63,12 +52,6 @@ const Controls = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
-      <MoneroWalletModal
-        isOpen={isMoneroModalOpen}
-        onClose={() => setIsMoneroModalOpen(false)}
-        amount={selectedCellAmount}
-      />
     </div>
   );
 };

@@ -60,7 +60,7 @@ interface CellProps {
 
 const Cell = ({ value, index, isSelected, isFilled, isPending, onSelect }: CellProps) => {
   const cellClassName = `cell ${isSelected ? 'selected' : ''} ${isFilled ? 'filled' : ''} ${isPending ? 'pending' : ''}`;
-  
+
   return (
     <div
       className={cellClassName}
