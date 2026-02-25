@@ -1,4 +1,4 @@
-# Digital Savings Box
+# Money Box
 
 A modern, functional digital savings box application that tracks your savings journey using a grid-based contribution system.
 
