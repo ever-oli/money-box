@@ -8,16 +8,6 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-// Map dollar amounts to Stripe price IDs
-const PRICE_MAP: Record<number, string> = {
-  5: "price_1T4poxENNBIo08B2uB9Q5Iqb",
-  10: "price_1T4pp3ENNBIo08B24pOdQzf3",
-  20: "price_1T4pp4ENNBIo08B2p0jjEDwT",
-  50: "price_1T4pp5ENNBIo08B2f56HYYDs",
-  100: "price_1T4pp6ENNBIo08B2KGuxemyY",
-  200: "price_1T4pp7ENNBIo08B2J2uAIxJA",
-};
-
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -51,11 +41,6 @@ serve(async (req) => {
       throw new Error("Cell is already taken");
     }
 
-    const priceId = PRICE_MAP[cell.amount];
-    if (!priceId) {
-      throw new Error(`No price configured for amount $${cell.amount}`);
-    }
-
     // Mark cell as pending
     const { error: updateError } = await supabase
       .from("grid_cells")
@@ -73,7 +58,19 @@ serve(async (req) => {
     });
 
     const session = await stripe.checkout.sessions.create({
-      line_items: [{ price: priceId, quantity: 1 }],
+      line_items: [
+        {
+          price_data: {
+            currency: "usd",
+            product_data: {
+              name: `Savings Grid Cell #${cell_index}`,
+              description: `Contribution for cell #${cell_index}`,
+            },
+            unit_amount: Math.round(cell.amount * 100), // Convert to cents
+          },
+          quantity: 1,
+        },
+      ],
       mode: "payment",
       success_url: `${req.headers.get("origin")}/?success=true&cell=${cell_index}`,
       cancel_url: `${req.headers.get("origin")}/?canceled=true&cell=${cell_index}`,
@@ -91,6 +88,7 @@ serve(async (req) => {
       status: 200,
     });
   } catch (error) {
+    console.error("Error creating checkout session:", error);
     return new Response(JSON.stringify({ error: error.message }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 400,
