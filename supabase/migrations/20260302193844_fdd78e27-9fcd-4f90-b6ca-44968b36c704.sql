@@ -1,0 +1,1 @@
+UPDATE grid_cells SET status = 'empty', stripe_session_id = NULL WHERE status = 'pending';
