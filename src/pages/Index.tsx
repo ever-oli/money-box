@@ -4,9 +4,10 @@ import SavingsGrid from '@/components/SavingsGrid';
 import StatsDisplay from '@/components/StatsDisplay';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
-import { useState } from 'react';
 import { formatCurrency } from '@/lib/savingsUtils';
 import { Loader2 } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+
 
 const Controls = () => {
   const { resetSavings, selectedCellAmount, selectedCell, isCheckingOut, initiateStripeCheckout } = useSavings();
@@ -59,9 +60,24 @@ const Controls = () => {
 const SuccessHandler = () => {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    if (params.get('success') === 'true') {
-      toast.success('Payment successful! Your cell is being updated.');
-      // Clean URL
+    const cellIndex = params.get('cell');
+    
+    if (params.get('success') === 'true' && cellIndex) {
+      // Verify payment with backend and update cell
+      toast.loading('Verifying payment...');
+      supabase.functions.invoke('verify-payment', {
+        body: { cell_index: parseInt(cellIndex) },
+      }).then(({ data, error }) => {
+        toast.dismiss();
+        if (error) {
+          toast.error('Payment verification failed. Please refresh the page.');
+          console.error('Verify error:', error);
+        } else if (data?.status === 'filled' || data?.status === 'already_filled') {
+          toast.success('Payment confirmed! Your cell has been filled.');
+        } else {
+          toast.error('Payment could not be verified. Please contact support.');
+        }
+      });
       window.history.replaceState({}, '', window.location.pathname);
     }
     if (params.get('canceled') === 'true') {
