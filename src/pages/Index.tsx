@@ -7,7 +7,7 @@ import { toast } from 'sonner';
 import { formatCurrency } from '@/lib/savingsUtils';
 import { Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { Loader2 } from 'lucide-react';
+
 
 const Controls = () => {
   const { resetSavings, selectedCellAmount, selectedCell, isCheckingOut, initiateStripeCheckout } = useSavings();
