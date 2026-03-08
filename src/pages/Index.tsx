@@ -4,8 +4,9 @@ import SavingsGrid from '@/components/SavingsGrid';
 import StatsDisplay from '@/components/StatsDisplay';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
-import { useState } from 'react';
 import { formatCurrency } from '@/lib/savingsUtils';
+import { Loader2 } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 import { Loader2 } from 'lucide-react';
 
 const Controls = () => {
