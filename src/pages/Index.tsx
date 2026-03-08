@@ -103,8 +103,9 @@ const Index = () => {
           <Controls />
           <SavingsGrid />
 
-          <footer className="mt-8 text-center text-sm text-muted-foreground">
+          <footer className="mt-8 text-center text-sm text-muted-foreground space-y-1">
             <p>Based on the traditional savings box concept.</p>
+            <p><a href="/privacy" className="underline hover:text-primary transition-colors">Privacy Policy</a></p>
           </footer>
         </div>
       </div>
