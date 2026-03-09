@@ -31,7 +31,27 @@ const Dashboard = () => {
   }, [user, authLoading, navigate]);
 
   useEffect(() => {
-    if (user) fetchBoxes();
+    if (!user) return;
+    fetchBoxes();
+
+    // Handle return from Stripe Connect onboarding
+    const params = new URLSearchParams(window.location.search);
+    const boxId = params.get('box');
+    if (params.get('stripe_connected') === 'true' && boxId) {
+      toast.loading('Verifying Stripe connection...');
+      supabase.functions.invoke('check-connect-status', {
+        body: { box_id: boxId },
+      }).then(({ data }) => {
+        toast.dismiss();
+        if (data?.complete) {
+          toast.success('Stripe account connected successfully!');
+          fetchBoxes();
+        } else {
+          toast.info('Stripe onboarding is not yet complete. Please try again.');
+        }
+      });
+      window.history.replaceState({}, '', window.location.pathname);
+    }
   }, [user]);
 
   const fetchBoxes = async () => {
