@@ -1,115 +1,146 @@
-import React, { useEffect } from 'react';
-import { SavingsProvider, useSavings } from '@/context/SavingsContext';
-import SavingsGrid from '@/components/SavingsGrid';
-import StatsDisplay from '@/components/StatsDisplay';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { toast } from 'sonner';
-import { formatCurrency } from '@/lib/savingsUtils';
-import { Loader2 } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
+import { Button } from '@/components/ui/button';
+import { formatCurrency } from '@/lib/savingsUtils';
 
-
-const Controls = () => {
-  const { resetSavings, selectedCellAmount, selectedCell, isCheckingOut, initiateStripeCheckout } = useSavings();
-
-  return (
-    <div className="flex flex-wrap justify-center gap-3 my-5">
-      {/* Stripe checkout button */}
-      <button
-        className="px-5 py-2.5 rounded-md font-medium bg-primary text-primary-foreground hover:bg-accent transition-all duration-300 flex items-center gap-2 disabled:opacity-50"
-        onClick={initiateStripeCheckout}
-        disabled={selectedCell === null || isCheckingOut}
-      >
-        {isCheckingOut ? (
-          <>
-            <Loader2 className="w-4 h-4 animate-spin" />
-            Processing...
-          </>
-        ) : selectedCell !== null ? (
-          `Contribute ${formatCurrency(selectedCellAmount)}`
-        ) : (
-          'Select a cell to contribute'
-        )}
-      </button>
-
-      <AlertDialog>
-        <AlertDialogTrigger asChild>
-          <button className="px-5 py-2.5 rounded-md font-medium bg-muted text-muted-foreground hover:bg-muted/80 transition-all duration-300">
-            Reset Savings
-          </button>
-        </AlertDialogTrigger>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will reset all your progress and start a new savings box.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={resetSavings} className="bg-primary text-primary-foreground hover:bg-accent">
-              Reset
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </div>
-  );
-};
-
-const SuccessHandler = () => {
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const cellIndex = params.get('cell');
-    
-    if (params.get('success') === 'true' && cellIndex) {
-      // Verify payment with backend and update cell
-      toast.loading('Verifying payment...');
-      supabase.functions.invoke('verify-payment', {
-        body: { cell_index: parseInt(cellIndex) },
-      }).then(({ data, error }) => {
-        toast.dismiss();
-        if (error) {
-          toast.error('Payment verification failed. Please refresh the page.');
-          console.error('Verify error:', error);
-        } else if (data?.status === 'filled' || data?.status === 'already_filled') {
-          toast.success('Payment confirmed! Your cell has been filled.');
-        } else {
-          toast.error('Payment could not be verified. Please contact support.');
-        }
-      });
-      window.history.replaceState({}, '', window.location.pathname);
-    }
-    if (params.get('canceled') === 'true') {
-      toast.info('Payment was canceled. The cell has been released.');
-      window.history.replaceState({}, '', window.location.pathname);
-    }
-  }, []);
-
-  return null;
-};
+interface BoxPreview {
+  id: string;
+  title: string;
+  description: string | null;
+  goal_amount: number;
+  slug: string;
+  created_at: string;
+}
 
 const Index = () => {
+  const { user } = useAuth();
+  const [boxes, setBoxes] = useState<BoxPreview[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchBoxes = async () => {
+      const { data } = await supabase
+        .from('savings_boxes')
+        .select('id, title, description, goal_amount, slug, created_at')
+        .eq('stripe_onboarding_complete', true)
+        .order('created_at', { ascending: false })
+        .limit(20);
+      if (data) setBoxes(data as BoxPreview[]);
+      setLoading(false);
+    };
+    fetchBoxes();
+  }, []);
+
   return (
-    <SavingsProvider>
-      <SuccessHandler />
-      <div className="min-h-screen py-8 px-4 sm:px-6 bg-background">
-        <div className="max-w-3xl mx-auto">
-          <h1 className="text-4xl font-bold text-primary text-center mb-6">
-            Digital Savings Box
-          </h1>
-
-          <StatsDisplay />
-          <Controls />
-          <SavingsGrid />
-
-          <footer className="mt-8 text-center text-sm text-muted-foreground space-y-1">
-            <p>Based on the traditional savings box concept.</p>
-            <p><a href="/privacy" className="underline hover:text-primary transition-colors">Privacy Policy</a></p>
-          </footer>
+    <div className="min-h-screen bg-background">
+      {/* Header */}
+      <header className="border-b border-border">
+        <div className="max-w-5xl mx-auto flex items-center justify-between px-4 py-4">
+          <Link to="/" className="text-2xl font-bold text-primary">CyberMoneyBox</Link>
+          <div className="flex gap-2">
+            {user ? (
+              <Button asChild size="sm">
+                <Link to="/dashboard">Dashboard</Link>
+              </Button>
+            ) : (
+              <>
+                <Button asChild variant="ghost" size="sm">
+                  <Link to="/login">Sign In</Link>
+                </Button>
+                <Button asChild size="sm">
+                  <Link to="/signup">Get Started</Link>
+                </Button>
+              </>
+            )}
+          </div>
         </div>
-      </div>
-    </SavingsProvider>
+      </header>
+
+      {/* Hero */}
+      <section className="py-20 px-4 text-center">
+        <div className="max-w-2xl mx-auto space-y-6">
+          <h1 className="text-5xl font-bold text-foreground leading-tight">
+            Save Money,<br />
+            <span className="text-primary">One Cell at a Time</span>
+          </h1>
+          <p className="text-lg text-muted-foreground">
+            Create your own digital savings box. Share it with friends, family, or your community. 
+            Each cell filled is a step closer to your goal.
+          </p>
+          <div className="flex justify-center gap-3">
+            <Button asChild size="lg">
+              <Link to="/signup">Create Your Box</Link>
+            </Button>
+            <Button asChild variant="outline" size="lg">
+              <Link to="#boxes">Browse Boxes</Link>
+            </Button>
+          </div>
+        </div>
+      </section>
+
+      {/* How it works */}
+      <section className="py-16 px-4 bg-card border-y border-border">
+        <div className="max-w-4xl mx-auto">
+          <h2 className="text-2xl font-bold text-center text-foreground mb-10">How It Works</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
+            <div className="space-y-3">
+              <div className="text-4xl">📦</div>
+              <h3 className="font-semibold text-foreground">Create a Box</h3>
+              <p className="text-sm text-muted-foreground">Sign up, name your savings goal, and connect your Stripe account.</p>
+            </div>
+            <div className="space-y-3">
+              <div className="text-4xl">🔗</div>
+              <h3 className="font-semibold text-foreground">Share Your Link</h3>
+              <p className="text-sm text-muted-foreground">Share your unique box URL. Anyone can contribute by filling a cell.</p>
+            </div>
+            <div className="space-y-3">
+              <div className="text-4xl">🎉</div>
+              <h3 className="font-semibold text-foreground">Reach Your Goal</h3>
+              <p className="text-sm text-muted-foreground">Watch your grid fill up as contributions roll in. Celebrate when you hit your target!</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Active Boxes */}
+      <section id="boxes" className="py-16 px-4">
+        <div className="max-w-4xl mx-auto">
+          <h2 className="text-2xl font-bold text-center text-foreground mb-8">Active Savings Boxes</h2>
+          {loading ? (
+            <p className="text-center text-muted-foreground">Loading...</p>
+          ) : boxes.length === 0 ? (
+            <div className="text-center py-8">
+              <p className="text-muted-foreground mb-4">No active boxes yet. Be the first!</p>
+              <Button asChild>
+                <Link to="/signup">Create a Box</Link>
+              </Button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {boxes.map((box) => (
+                <Link
+                  key={box.id}
+                  to={`/box/${box.slug}`}
+                  className="bg-card rounded-xl border border-border p-6 hover:border-primary transition-colors space-y-2"
+                >
+                  <h3 className="text-lg font-semibold text-foreground">{box.title}</h3>
+                  {box.description && <p className="text-sm text-muted-foreground line-clamp-2">{box.description}</p>}
+                  <p className="text-sm text-primary font-medium">Goal: {formatCurrency(box.goal_amount)}</p>
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="border-t border-border py-8 px-4 text-center text-sm text-muted-foreground space-y-1">
+        <p>© {new Date().getFullYear()} CyberMoneyBox. Based on the traditional savings box concept.</p>
+        <p><Link to="/privacy" className="underline hover:text-primary">Privacy Policy</Link></p>
+      </footer>
+    </div>
   );
 };
 

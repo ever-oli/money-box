@@ -22,7 +22,6 @@ serve(async (req) => {
 
   let event: Stripe.Event;
 
-  // If we have a webhook secret, verify the signature
   const webhookSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET");
   if (webhookSecret && signature) {
     try {
@@ -32,7 +31,6 @@ serve(async (req) => {
       return new Response(JSON.stringify({ error: "Invalid signature" }), { status: 400 });
     }
   } else {
-    // For development, parse directly
     event = JSON.parse(body);
   }
 
@@ -44,33 +42,52 @@ serve(async (req) => {
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as Stripe.Checkout.Session;
     const cellIndex = session.metadata?.cell_index;
+    const boxId = session.metadata?.box_id;
 
     if (cellIndex !== undefined) {
-      const { error } = await supabase
+      const query = supabase
         .from("grid_cells")
         .update({ status: "filled", stripe_session_id: session.id })
         .eq("cell_index", parseInt(cellIndex));
+      
+      if (boxId) query.eq("box_id", boxId);
 
+      const { error } = await query;
       if (error) {
         console.error("Failed to update cell:", error);
         return new Response(JSON.stringify({ error: "DB update failed" }), { status: 500 });
       }
-
       console.log(`Cell ${cellIndex} marked as filled`);
     }
   }
 
-  // Handle canceled/expired sessions - revert to empty
   if (event.type === "checkout.session.expired") {
     const session = event.data.object as Stripe.Checkout.Session;
     const cellIndex = session.metadata?.cell_index;
+    const boxId = session.metadata?.box_id;
 
     if (cellIndex !== undefined) {
-      await supabase
+      const query = supabase
         .from("grid_cells")
         .update({ status: "empty", stripe_session_id: null })
         .eq("cell_index", parseInt(cellIndex))
         .eq("status", "pending");
+      
+      if (boxId) query.eq("box_id", boxId);
+      await query;
+    }
+  }
+
+  // Handle account.updated for Stripe Connect onboarding completion
+  if (event.type === "account.updated") {
+    const account = event.data.object as Stripe.Account;
+    if (account.charges_enabled && account.payouts_enabled) {
+      // Mark the savings box as onboarding complete
+      await supabase
+        .from("savings_boxes")
+        .update({ stripe_onboarding_complete: true })
+        .eq("stripe_account_id", account.id);
+      console.log(`Stripe account ${account.id} onboarding complete`);
     }
   }
 
