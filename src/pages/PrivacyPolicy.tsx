@@ -109,8 +109,8 @@ const PrivacyPolicy = () => {
             <h2 className="text-xl font-semibold text-primary mb-3">12. Contact Us</h2>
             <p>
               If you have any questions about this Privacy Policy, please contact us at{' '}
-              <a href="mailto:privacy@cybermoneybox.lovable.app" className="text-primary hover:text-accent underline">
-                privacy@cybermoneybox.lovable.app
+              <a href="mailto:everolivares07@gmail.com" className="text-primary hover:text-accent underline">
+                everolivares07@gmail.com
               </a>.
             </p>
           </section>
