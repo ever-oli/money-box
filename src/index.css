@@ -57,11 +57,9 @@
 @layer components {
   .savings-grid {
     display: grid;
-    grid-template-columns: repeat(var(--grid-cols, 16), minmax(40px, 1fr));
-    gap: 4px;
-    overflow: auto;
-    overscroll-behavior: none;
-    -webkit-overflow-scrolling: touch;
+    grid-template-columns: repeat(var(--grid-cols, 16), 1fr);
+    gap: 3px;
+    overflow: hidden;
   }
 
   .cell {
