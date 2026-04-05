@@ -57,11 +57,9 @@
 @layer components {
   .savings-grid {
     display: grid;
-    grid-template-columns: repeat(var(--grid-cols, 16), minmax(40px, 1fr));
-    gap: 4px;
-    overflow: auto;
-    overscroll-behavior: none;
-    -webkit-overflow-scrolling: touch;
+    grid-template-columns: repeat(var(--grid-cols, 16), 1fr);
+    gap: 3px;
+    overflow: hidden;
   }
 
   .cell {
@@ -118,9 +116,7 @@
     }
   }
 
-  @media (max-width: 640px) {
-    .savings-grid {
-      grid-template-columns: repeat(var(--grid-cols, 8), 40px);
-    }
+  .cell {
+    font-size: clamp(0.5rem, 2vw, 0.875rem);
   }
 }
