@@ -17,6 +17,7 @@ export type Database = {
       grid_cells: {
         Row: {
           amount: number
+          box_id: string | null
           cell_index: number
           created_at: string
           id: string
@@ -26,6 +27,7 @@ export type Database = {
         }
         Insert: {
           amount: number
+          box_id?: string | null
           cell_index: number
           created_at?: string
           id?: string
@@ -35,6 +37,7 @@ export type Database = {
         }
         Update: {
           amount?: number
+          box_id?: string | null
           cell_index?: number
           created_at?: string
           id?: string
@@ -42,7 +45,89 @@ export type Database = {
           status?: string
           stripe_session_id?: string | null
         }
+        Relationships: [
+          {
+            foreignKeyName: "grid_cells_box_id_fkey"
+            columns: ["box_id"]
+            isOneToOne: false
+            referencedRelation: "savings_boxes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          bio: string | null
+          created_at: string
+          display_name: string | null
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string
+          display_name?: string | null
+          id: string
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          updated_at?: string
+        }
         Relationships: []
+      }
+      savings_boxes: {
+        Row: {
+          created_at: string
+          description: string | null
+          goal_amount: number
+          id: string
+          owner_id: string
+          slug: string
+          stripe_account_id: string | null
+          stripe_onboarding_complete: boolean
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          goal_amount?: number
+          id?: string
+          owner_id: string
+          slug: string
+          stripe_account_id?: string | null
+          stripe_onboarding_complete?: boolean
+          title?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          goal_amount?: number
+          id?: string
+          owner_id?: string
+          slug?: string
+          stripe_account_id?: string | null
+          stripe_onboarding_complete?: boolean
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "savings_boxes_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
