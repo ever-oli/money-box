@@ -116,9 +116,7 @@
     }
   }
 
-  @media (max-width: 640px) {
-    .savings-grid {
-      grid-template-columns: repeat(var(--grid-cols, 8), 40px);
-    }
+  .cell {
+    font-size: clamp(0.5rem, 2vw, 0.875rem);
   }
 }

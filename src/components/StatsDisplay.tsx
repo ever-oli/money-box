@@ -7,7 +7,7 @@ const StatsDisplay = () => {
 
   return (
     <div className="w-full">
-      <div className="bg-primary text-primary-foreground rounded-xl p-8 shadow-lg">
+      <div className="bg-primary text-primary-foreground rounded-xl p-4 sm:p-8 shadow-lg">
         <div className="grid grid-cols-3 gap-2 sm:gap-6 text-center">
           <div>
             <div className="text-xl sm:text-3xl font-bold text-secondary">{formatCurrency(currentAmount)}</div>
